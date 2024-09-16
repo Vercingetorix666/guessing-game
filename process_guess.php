@@ -1,5 +1,8 @@
 <?php
-session_start();
+// Check if the session is already active
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // Initialize session variables if not already set
 if (!isset($_SESSION['target_number'])) {
@@ -12,25 +15,32 @@ $target_number = $_SESSION['target_number'];
 $guesses = $_SESSION['guesses'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $guess = isset($_POST['guess']) ? (int)$_POST['guess'] : null;
-    $guesses++;
-
-    if ($guess === $target_number) {
-        $message = "Congratulations! $target_number is correct. You guessed the number in $guesses guesses.";
+    if (isset($_POST['giveup'])) {
+        // Handle the "Give up" button
+        $message = "The correct number was $target_number. Better luck next time!";
         session_unset(); // Unset all session variables
         session_destroy(); // Destroy the session
-    } elseif ($guess < $target_number) {
-        $message = "Too low! Try again.";
     } else {
-        $message = "Too high! Try again.";
-    }
+        // Handle the guess
+        $guess = isset($_POST['guess']) ? (int)$_POST['guess'] : null;
+        $guesses++;
 
-    // Update the session with the new number of guesses
-    $_SESSION['guesses'] = $guesses;
+        if ($guess === $target_number) {
+            $message = "Congratulations! $target_number is correct. You guessed the number in $guesses guesses.";
+            session_unset(); // Unset all session variables
+            session_destroy(); // Destroy the session
+        } elseif ($guess < $target_number) {
+            $message = "Too low! Try again.";
+        } else {
+            $message = "Too high! Try again.";
+        }
+
+        // Update the session with the new number of guesses
+        $_SESSION['guesses'] = $guesses;
+    }
 }
 
 // Return the message to be displayed
 if (isset($message)) {
     echo $message;
 }
-?>
